@@ -14,12 +14,23 @@ import (
 	"github.com/mjdilworth/ptsre-dpvs-command/api"
 )
 
+var (
+	InfoLogger  *log.Logger
+	WarnLogger  *log.Logger
+	ErrorLogger *log.Logger
+)
 func main() {
 
 	//flags
 	serverPort := flag.String("port", ":8080", "specify the port the server listens on")
 
 	flag.Parse()
+
+	//set up logging
+
+	InfoLogger = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	WarnLogger = log.New(os.Stdout, "WARN: ", log.Ldate|log.Ltime|log.Lshortfile)
+	ErrorLogger = log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	//start command goroutine
 	command := make(chan string)
@@ -30,13 +41,17 @@ func main() {
 		Addr: *serverPort,
 	}
 
-	th := api.TimeHandler(time.RFC1123)
-	http.Handle("/time", th)
 
+	//simple
 	http.HandleFunc("/health/", api.Health)
 	http.HandleFunc("/", api.Root)
 	http.HandleFunc("/secret/", api.Auth)
 	http.HandleFunc("/spacepeeps/", api.Spacepeeps)
+	
+
+	th := api.TimeHandler(time.RFC1123)
+	http.Handle("/time", th)
+
 	lh := api.LogHandler(command)
 	http.Handle("/log/", lh)
 	http.HandleFunc("/log/help", api.Help)
@@ -59,6 +74,7 @@ func main() {
 
 func cmdInfo(command <-chan string) {
 	var status = "Play"
+	var level = "info"
 
 	count := 0
 	for {
@@ -67,21 +83,30 @@ func cmdInfo(command <-chan string) {
 			fmt.Println(cmd)
 			switch cmd {
 			case "stop":
+				{
 				return
 			case "pause":
 				status = "pause"
 			case "info":
-				status = "info"
+				level = "info"
 			case "warn":
-				status = "warn"
+				level = "warn"
 			case "error":
-				status = "error"
+				level = "error"
 			default:
 				status = "play"
 			}
 		case <-time.After(1 * time.Second):
 			if status == "play" {
 				count = count + 1
+				switch level {
+				case "info":
+					InfoLogger.Println(count)
+				case "warn":
+					WarnLogger.Println(count)
+				case "error":
+					ErrorLogger.Println(count)
+				}
 			}
 		}
 	}

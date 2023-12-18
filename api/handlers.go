@@ -159,13 +159,13 @@ func LogHandler(command chan<- string) http.Handler {
 			log.Println("Stopping")
 		case "info":
 			command <- "info"
-			log.Println("Setting to INFO")
+			log.Println("Setting logs to INFO")
 		case "warn":
 			command <- "warn"
-			log.Println("Setting to WARN")
+			log.Println("Setting logs to WARN")
 		case "error":
 			command <- "error"
-			log.Println("Setting to ERROR")
+			log.Println("Setting logs to ERROR")
 		default:
 			log.Printf("Unkown command %s : send help for ... help", request)
 		}
