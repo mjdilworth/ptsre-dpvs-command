@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -59,7 +60,7 @@ func Root(w http.ResponseWriter, r *http.Request) {
 func Help(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
-	w.Write([]byte(`{"message": "commands to use: play, pause, stop, info, warn, error "}`))
+	w.Write([]byte(`{"message": "commands to use: play, stop, info, warn, error "}`))
 }
 
 func Auth(w http.ResponseWriter, req *http.Request) {
@@ -74,67 +75,6 @@ func Auth(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Used for matching variables in a request URL.
-//var reResVars = regexp.MustCompile(`\\\{[^{}]+\\\}`)
-
-// Log handler to stop and start
-func LogOrig(w http.ResponseWriter, r *http.Request) {
-
-	//this retrieves the last element in URI
-	request := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
-	//request := r.URL.Path
-
-	if request == "start" {
-		if logging {
-			return
-		}
-
-		//start the logging go routine
-		logging = true
-		go func() { // work in background
-			// close the stopped channel when this func
-			// exits
-			defer close(stoppedlogchan)
-			//defer stoppedlogchan = make(chan struct{})
-			// TODO: do setup work
-			defer func() {
-				// TODO: do teardown work
-				fmt.Println("Graceful handler exit using stoplogchan")
-			}()
-			for {
-				select {
-				// TODO: do a bit of the work
-				case <-time.After(1 * time.Second):
-					fmt.Println("log something")
-				case <-stoplogchan:
-					fmt.Println("stopping")
-					// stop
-					return
-				}
-			}
-		}()
-
-	} else if request == "stop" {
-		if !logging {
-			return
-		}
-		//stop the logging go routine
-		log.Println("stopping...")
-		close(stoplogchan) // tell it to stop
-		<-stoppedlogchan   // wait for it to have stopped
-		logging = false
-		//re-create channels
-		stoplogchan = make(chan struct{})
-		log.Println("Stopped.")
-
-	} else {
-		//do nothing
-		fmt.Println("unknown request")
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
 func TimeHandler(format string) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		tm := time.Now().Format(format)
@@ -144,19 +84,27 @@ func TimeHandler(format string) http.Handler {
 }
 
 func LogHandler(command chan<- string) http.Handler {
+	var commandPat = regexp.MustCompile(`^time=.`)
+
 	fn := func(w http.ResponseWriter, r *http.Request) {
+
 		//this retrives the last elementin URI
 		request := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+		bRet := commandPat.MatchString(request)
+		if bRet {
+			command <- request
+			pair := strings.Split(request, "=")
+			log.Println("Setting log generation time to " + pair[1])
+			return
+
+		}
 		switch request {
 		case "play":
 			command <- "play"
 			log.Println("Playing logs")
-		case "pause":
-			command <- "pause"
-			log.Println("Pausing logs")
 		case "stop":
 			command <- "stop"
-			log.Println("Stopping")
+			log.Println("Stopping logging")
 		case "info":
 			command <- "info"
 			log.Println("Setting logs to INFO")
@@ -166,6 +114,16 @@ func LogHandler(command chan<- string) http.Handler {
 		case "error":
 			command <- "error"
 			log.Println("Setting logs to ERROR")
+		case "one":
+			command <- "one"
+			log.Println("Setting logs to write every second")
+		case "five":
+			command <- "five"
+			log.Println("Setting logs to write every five seconds")
+		case "thirty":
+			command <- "thirty"
+			log.Println("Setting logs to write every 30 seconds")
+
 		default:
 			log.Printf("Unkown command %s : send help for ... help", request)
 		}
@@ -234,4 +192,65 @@ func getAstros(apiURL string) (people, error) {
 	}
 
 	return p, nil
+}
+
+// Used for matching variables in a request URL.
+//var reResVars = regexp.MustCompile(`\\\{[^{}]+\\\}`)
+
+// Log handler to stop and start
+func LogOrig(w http.ResponseWriter, r *http.Request) {
+
+	//this retrieves the last element in URI
+	request := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+	//request := r.URL.Path
+
+	if request == "start" {
+		if logging {
+			return
+		}
+
+		//start the logging go routine
+		logging = true
+		go func() { // work in background
+			// close the stopped channel when this func
+			// exits
+			defer close(stoppedlogchan)
+			//defer stoppedlogchan = make(chan struct{})
+			// TODO: do setup work
+			defer func() {
+				// TODO: do teardown work
+				fmt.Println("Graceful handler exit using stoplogchan")
+			}()
+			for {
+				select {
+				// TODO: do a bit of the work
+				case <-time.After(1 * time.Second):
+					fmt.Println("log something")
+				case <-stoplogchan:
+					fmt.Println("stopping")
+					// stop
+					return
+				}
+			}
+		}()
+
+	} else if request == "stop" {
+		if !logging {
+			return
+		}
+		//stop the logging go routine
+		log.Println("stopping...")
+		close(stoplogchan) // tell it to stop
+		<-stoppedlogchan   // wait for it to have stopped
+		logging = false
+		//re-create channels
+		stoplogchan = make(chan struct{})
+		log.Println("Stopped.")
+
+	} else {
+		//do nothing
+		fmt.Println("unknown request")
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

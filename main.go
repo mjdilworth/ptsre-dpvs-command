@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mjdilworth/ptsre-dpvs-command/api"
@@ -19,6 +22,7 @@ var (
 	WarnLogger  *log.Logger
 	ErrorLogger *log.Logger
 )
+
 func main() {
 
 	//flags
@@ -41,13 +45,11 @@ func main() {
 		Addr: *serverPort,
 	}
 
-
 	//simple
 	http.HandleFunc("/health/", api.Health)
 	http.HandleFunc("/", api.Root)
 	http.HandleFunc("/secret/", api.Auth)
 	http.HandleFunc("/spacepeeps/", api.Spacepeeps)
-	
 
 	th := api.TimeHandler(time.RFC1123)
 	http.Handle("/time", th)
@@ -73,30 +75,38 @@ func main() {
 }
 
 func cmdInfo(command <-chan string) {
-	var status = "Play"
+	var status = "play"
 	var level = "info"
+	var gap = 1
 
 	count := 0
+	var commandPat = regexp.MustCompile(`^time=.`)
+
 	for {
+
 		select {
+
 		case cmd := <-command:
 			fmt.Println(cmd)
 			switch cmd {
 			case "stop":
-				{
-				return
-			case "pause":
-				status = "pause"
+				status = "stop"
 			case "info":
 				level = "info"
 			case "warn":
 				level = "warn"
 			case "error":
 				level = "error"
+
 			default:
+				if commandPat.MatchString(cmd) {
+					pair := strings.Split(cmd, "=")
+					gap, _ = strconv.Atoi(pair[1])
+				}
 				status = "play"
 			}
-		case <-time.After(1 * time.Second):
+
+		case <-time.After(time.Duration(gap) * time.Second):
 			if status == "play" {
 				count = count + 1
 				switch level {
