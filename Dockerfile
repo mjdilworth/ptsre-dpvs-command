@@ -1,3 +1,23 @@
+# Build phase
+FROM golang:1.20 AS builder
+# Next line is just for debug
+RUN ldd --version
+WORKDIR /build
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+COPY . .
+WORKDIR /build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ptsre-adfo-app
+
+# Production phase
+FROM alpine:3.14
+# Next line is just for debug
+RUN ldd; exit 0
+WORKDIR /app
+COPY --from=builder /build/bin/ptsre-adfo-app .
+ENTRYPOINT [ "/app/ptsre-adfo-app"]
+
+
 # syntax=docker/dockerfile:1
 
 FROM golang:1.17-alpine
