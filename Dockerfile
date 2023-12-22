@@ -44,7 +44,8 @@ RUN go mod download
 COPY . *.go ./
 
 # compile application
-RUN go build -o /ptsre-adfo-app
+RUN CGO_ENABLED=0 GOOS=linux go build -o /ptsre-adfo-app
+#RUN chown nobody ./ptsre-adfo-app && chmod +x ./ptsre-adfo-app
 
 ##
 ## STEP 2 - DEPLOY
@@ -53,13 +54,14 @@ FROM scratch
 
 WORKDIR /
 
-COPY --from=build-stage ptsre-adfo-app /ptsre-adfo-app
+COPY --from=build-stage /ptsre-adfo-app /ptsre-adfo-app
+
 
 USER 1001
 
 EXPOSE 8080
 
-ENTRYPOINT ["/ptsre-adfo-app"]
+CMD ["/ptsre-adfo-app"]
 
 # Add the artifact
 #COPY bin/linux-amd64/${app_name} /home/jpmcnobody/${app_name}

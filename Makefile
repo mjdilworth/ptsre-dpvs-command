@@ -8,31 +8,6 @@ DATECMD := date$(if $(findstring Windows,$(OS)),.exe,)
 BUILD_TIMESTAMP := $(shell ${DATECMD} +%Y-%m-%dT%H:%m:%S%z)
 .DEFAULT_GOAL := all
 
-ARCHES = amd64 arm64 ppc64le s390x
-
-# BUILDARCH is the host architecture
-# ARCH is the target architecture
-# we need to keep track of them separately
-BUILDARCH ?= $(shell uname -m)
-
-# canonicalized names for host architecture
-ifeq ($(BUILDARCH),aarch64)
-	BUILDARCH=arm64
-endif
-ifeq ($(BUILDARCH),x86_64)
-	BUILDARCH=amd64
-endif
-
-# unless otherwise set, I am building for my own architecture, i.e. not cross-compiling
-ARCH ?= $(BUILDARCH)
-
-# canonicalized names for target architecture
-ifeq ($(ARCH),aarch64)
-	override ARCH=arm64
-endif
-ifeq ($(ARCH),x86_64)
-	override ARCH=amd64
-endif
 
 os_arch = $(word 4, $(shell go version))
 os = $(word 1,$(subst /, ,$(os_arch)))
@@ -66,6 +41,7 @@ me: ## build for local architrcrture
 build: ## build your project 
 	@make --no-print-directory build-platform GOOS=windows GOARCH=amd64 CGO_ENABLED=0
 	@make --no-print-directory build-platform GOOS=linux GOARCH=amd64 CGO_ENABLED=0
+	@make --no-print-directory build-platform GOOS=linux GOARCH=arm64 CGO_ENABLED=0
 	@make --no-print-directory build-platform GOOS=darwin GOARCH=amd64 CGO_ENABLED=0
 	@make --no-print-directory build-platform GOOS=${os} GOARCH=${arch}  CGO_ENABLED=0
 	
@@ -127,7 +103,7 @@ ci: clean test build ## as used by jules, cleans, tests an dbuilds
 
 ## Docker:
 docker-build: ## Use the dockerfile to build the container
-	docker build --rm --tag $(BINARY_NAME) .
+	docker build --rm --tag $(BINARY_NAME):v0.1.0 .
 
 docker-release: ## Release the container with tag latest and version
 	docker tag $(BINARY_NAME) $(DOCKER_REGISTRY)$(BINARY_NAME):latest

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ptsre-adfo-app-deployment
+  labels:
+    app: adfo
+spec:
+  replicas: 1
+  strategy:
+      type: RollingUpdate
+  selector:
+    matchLabels:
+      app: adfo
+  template:
+    metadata:
+      labels:
+        app: adfo
+    spec:
+      containers:
+      - name: ptsre-adfo-app
+        image: ptsre-adfo-app:v0.1.0
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health/
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /                # The path to check for the readiness probe
+            port: 8080               # The port to check on
+          initialDelaySeconds: 5   # Wait this many seconds before starting the probe
+          periodSeconds: 5         # Check the probe every 5 seconds
