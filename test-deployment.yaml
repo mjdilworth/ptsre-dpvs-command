@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debian
+  labels:
+    app: debian
+spec:
+  replicas: 1
+  strategy:
+      type: RollingUpdate
+  selector:
+    matchLabels:
+      app: debian
+  template:
+    metadata:
+      labels:
+        app: debian
+    spec:
+      containers:
+      - name: debian
+        image: debian:v0.1.0
+        command:
+        - sh
+        - -c
+        - while true; do sleep 1; done
+        livenessProbe:
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 1
+          exec:
+            command:
+              - cat 
+              - /etc/hosts
+            

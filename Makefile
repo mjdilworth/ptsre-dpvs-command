@@ -101,7 +101,14 @@ cover: test ## run test coverage
 ci: clean test build ## as used by jules, cleans, tests an dbuilds
 
 
-## Docker:
+## Docker
+.PHONY: docker-local
+## docker-local:
+docker-local: ## Use the dockerfile to build the container
+	docker build -f Dockerfile.local --rm --tag $(BINARY_NAME):v0.1.0 .
+
+.PHONY: docker-build
+## docker-build:
 docker-build: ## Use the dockerfile to build the container
 	docker build --rm --tag $(BINARY_NAME):v0.1.0 .
 

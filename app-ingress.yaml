@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adfo-http
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: 
+spec:
+  rules:
+    #- host: whoami.127.0.0.1.sslip.io
+    - host: monty
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: adfo
+                port:
+                  number: 8080
+---

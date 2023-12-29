@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+##
+## STEP 1 - BUILD
+##
+ARG build_version="darwin"
+ARG app_name="ptsre-adfo-app"
+
+ARG GOOS=linux
+ARG GOARCH=arm64
+
+FROM alpine:3.14 AS build-stage
+
+RUN apk add --no-cache git make musl-dev go
+
+# create a working directory inside the image
+WORKDIR /app
+
+# copy Go modules and dependencies to image
+COPY go.mod ./
+
+# download Go modules and dependencies
+RUN go mod download
+
+# copy directory files i.e all files ending with .go
+COPY . *.go ./
+
+# compile application
+RUN CGO_ENABLED=0 GOOS=linux go build -o /ptsre-adfo-app
+#R
+##
+## STEP 2 - DEPLOY
+##
+FROM scratch
+
+WORKDIR /
+
+COPY --from=build-stage /ptsre-adfo-app /ptsre-adfo-app
+
+
+USER 1001
+
+EXPOSE 8080
+
+CMD ["/ptsre-adfo-app"]

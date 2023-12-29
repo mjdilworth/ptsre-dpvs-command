@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ptsre-adfo-app-deployment
+  name: adfo
   labels:
     app: adfo
 spec:
-  replicas: 1
+  replicas: 3
   strategy:
       type: RollingUpdate
   selector:
@@ -17,8 +17,9 @@ spec:
         app: adfo
     spec:
       containers:
-      - name: ptsre-adfo-app
-        image: ptsre-adfo-app:v0.1.0
+      - name: adfo
+        #image: ptsre-adfo-app:v0.1.0
+        image: lucinda.dilworth.uk:8080/ptsre-adfo-app
         ports:
         - containerPort: 8080
         livenessProbe:
