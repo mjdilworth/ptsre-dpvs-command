@@ -13,9 +13,12 @@ RUN apt-get update && apt-get install -y \
     tightvncserver \
     wget \
     net-tools \
+    dnsutils \
     iputils-ping \
     dbus-x11 \
     nano \
+    btop \
+    locales \
     curl
 
 # Create directory for VNC server

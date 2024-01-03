@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: debian-desktop
+  labels:
+    run: debian-desktop
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5901
+    protocol: TCP
+  selector:
+    app: debian-desktop

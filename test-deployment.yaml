@@ -1,28 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: debian
+  name: debian-desktop
   labels:
-    app: debian
+    app: debian-desktop
 spec:
   replicas: 1
   strategy:
       type: RollingUpdate
   selector:
     matchLabels:
-      app: debian
+      app: debian-desktop
   template:
     metadata:
       labels:
-        app: debian
+        app: debian-desktop
     spec:
       containers:
-      - name: debian
-        image: debian:v0.1.0
+      - name: debian-desktop
+        image: lucinda.dilworth.uk:8080/debian-desktop:v0.1.1
+        #bash -c "touch /root/.Xresources && vncserver :1 -geometry 1280x800 -depth 24 && tail -F /root/.vnc/*.log"
         command:
         - sh
         - -c
-        - while true; do sleep 1; done
+        - touch /root/.Xresources && vncserver :1 -geometry 1280x800 -depth 24 && tail -F /root/.vnc/*.log
         livenessProbe:
           initialDelaySeconds: 3
           periodSeconds: 5

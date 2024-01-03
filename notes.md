@@ -123,6 +123,8 @@ docker push lucinda.dilworth.uk:8080/deb
 docker tag debian:v0.1.0 lucinda.dilworth.uk:8080/debian:v0.1.0
 docker push lucinda.dilworth.uk:8080/debian:v0.1.0
 
+docker tag debian-desktop:v0.1.1 lucinda.dilworth.uk:8080/debian-desktop:v0.1.1
+docker push lucinda.dilworth.uk:8080/debian-desktop:v0.1.1
 
 ### run docker desktop with
 docker run -it --rm -p 5901:5901 -e USER=root debian-desktop     bash -c "touch /root/.Xresources && vncserver :1 -geometry 1280x800 -depth 24 && tail -F /root/.vnc/*.log"
@@ -143,6 +145,8 @@ kubectl run flow-pod -i --tty --image debian:unstable-slim -rm --restart=Never -
 kubectl run my-deb -i --tty --image debian:v0.1.0 --rm --restart=Never -- bash
 kubectl run my-busy --image=busybox --rm -it --restart=Never -- sh
 
+
+kubectl run my-deb-desktop -i --tty --image debian:v0.1.0 --rm --restart=Never -- bash
 ### exec on to pod
 
 kubectl exec --stdin --tty debian -- /bin/bash
@@ -190,4 +194,14 @@ spec:
 
 ### useful on liveness and health probes
   https://apprecode.com/blog/kubernetes-rediness-liveness-probes#:~:text=What%20if%20we%20don't,of%20the%20PID%201%20process. 
+
+
+
+kubectl proxy
+kubectl port-forward pods/hello-world 8080:80  5901
+
+
+
+
+
 

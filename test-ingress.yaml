@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: 
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: 
+spec:
+  rules:
+    #- host: whoami.127.0.0.1.sslip.io
+    - host: monty
+        port: 5901
+          backend:
+            service:
+              name: debian-desktop
+              port:
+                number: 5901
